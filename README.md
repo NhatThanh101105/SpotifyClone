@@ -67,6 +67,4 @@ This project is highly optimized for deployment on **Vercel** because it uses Vi
 
 > **Note on GitHub Pages:** You can also deploy to GitHub Pages, but because this is a Vite app routing might require extra setup (like configuring a `base` URL in `vite.config.js`). Vercel handles all of this automatically and is much faster for this specific stack.
 
-## 👤 Author
 
-Developed during the F8 Fullstack course.
