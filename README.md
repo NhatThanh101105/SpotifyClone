@@ -41,7 +41,7 @@ A full-featured Spotify Web Player clone built with vanilla JavaScript, HTML, CS
 3. **Environment Variables:**
    Create a `.env` file in the root directory (this file is ignored by Git to keep your data safe) and configure your API URL:
    ```env
-   VITE_API_BASE_URL=https://api-f8.fullstack.edu.vn
+   VITE_API_BASE_URL=https://spotify.f8team.dev
    ```
 
 4. **Start the development server:**
