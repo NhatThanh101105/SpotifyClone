@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background-base: #000;
+  --color-foreground-base: #fff;
+  --color-background-card: #1f1f1f;
+  --color-background-card-hover: #282828;
+  --color-foreground-accent: #b3b3b3;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background-base);
+    color: var(--color-foreground-base);
+  }
+}
+
+/* Custom Scrollbar for Spotify look */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  border: 3px solid #121212;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}

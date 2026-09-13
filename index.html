@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify - Web Player: Music for everyone</title>
+  <link rel="stylesheet" href="./src/style.css" />
+  <script>
+    window.getUserKey = function(key) {
+      try {
+        var user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+          var uid = user._id || user.id || user.user_id || user.username;
+          if (uid) {
+            return key + '_' + uid;
+          }
+        }
+      } catch(e) {}
+      return key;
+    };
+  </script>
+</head>
+
+<body class="overflow-hidden bg-black text-white font-sans">
+  <div id="app" class="flex h-screen flex-col bg-black overflow-hidden pb-[90px]">
+    <!-- HEADER -->
+    <header class="flex h-16 items-center justify-between px-4 gap-4 relative z-50">
+      <!-- Left (Logo) -->
+      <div class="flex items-center shrink-0">
+        <a href="#" class="text-white hover:scale-105 transition-transform ml-2">
+          <svg viewBox="0 0 24 24" class="h-8 w-8 fill-current">
+            <path
+              d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.539-1.56.299z" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Center (Home + Search) -->
+      <div class="flex flex-1 items-center justify-center gap-2 min-w-0 max-w-[600px]">
+        <!-- Home button -->
+        <a href="#" data-tooltip="Home"
+          class="flex h-12 w-12 items-center justify-center rounded-full bg-[#1f1f1f] text-white hover:scale-105 transition-transform shrink-0">
+          <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+            <path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h4.5v-6a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v6H20V7.577l-7.5-4.33z" />
+          </svg>
+        </a>
+        <!-- Search box container -->
+        <div class="relative w-full flex-1">
+          <div
+            class="group flex h-12 w-full items-center rounded-full bg-[#1f1f1f] px-3 hover:bg-[#2a2a2a] focus-within:bg-[#2a2a2a] focus-within:border-white border border-transparent transition-colors">
+            <svg viewBox="0 0 24 24"
+              class="h-6 w-6 fill-[#b3b3b3] group-hover:fill-white group-focus-within:fill-white shrink-0">
+              <path
+                d="M10.533 1.27893C5.35215 1.27893 1.12598 5.41887 1.12598 10.5579C1.12598 15.697 5.35215 19.8369 10.533 19.8369C12.767 19.8369 14.8235 19.0671 16.4402 17.7794L20.7929 22.132C21.1834 22.5226 21.8166 22.5226 22.2071 22.132C22.5976 21.7415 22.5976 21.1083 22.2071 20.7178L17.8634 16.3741C19.1616 14.7849 19.94 12.7634 19.94 10.5579C19.94 5.41887 15.7138 1.27893 10.533 1.27893ZM3.12598 10.5579C3.12598 6.53225 6.42512 3.27893 10.533 3.27893C14.6409 3.27893 17.94 6.53225 17.94 10.5579C17.94 14.5836 14.6409 17.8369 10.533 17.8369C6.42512 17.8369 3.12598 14.5836 3.12598 10.5579Z">
+              </path>
+            </svg>
+            <input id="search-input" type="text" placeholder="What do you want to play?" autocomplete="off"
+              class="h-full w-full bg-transparent px-3 text-white placeholder:text-[#b3b3b3] focus:outline-none font-medium truncate" />
+            <div class="h-6 w-[1px] bg-[#727272] mx-2 shrink-0"></div>
+            <!-- Browse icon -->
+            <button data-tooltip="Search"
+              class="flex items-center justify-center p-1 hover:scale-105 transition-transform group-hover:text-white text-[#b3b3b3] shrink-0">
+              <svg viewBox="0 0 24 24" class="h-5 w-5 fill-current">
+                <path
+                  d="M15 15.5c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2zM5 15.5c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2zM21 15.5c0 1.104-.896 2-2 2s-2-.896-2-2 .896-2 2-2 2 .896 2 2z">
+                </path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Dropdown Search Results -->
+          <div id="search-dropdown" class="absolute top-[110%] left-0 right-0 bg-[#282828] rounded-lg shadow-[0_16px_24px_rgba(0,0,0,0.5)] p-2 hidden flex-col z-50 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div id="search-dropdown-content" class="flex flex-col gap-1 w-full text-white">
+              <!-- JS sẽ điền kết quả vào đây -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right (Menu + Auth) -->
+      <div class="flex items-center justify-end gap-2 xl:gap-4 text-[14px] font-bold text-[#b3b3b3] shrink-0 relative">
+        <div id="guest-links" class="flex items-center gap-4 xl:gap-6">
+          <a href="#" class="hover:text-white hover:scale-105 transition-all hidden xl:block">Premium</a>
+          <a href="#" class="hover:text-white hover:scale-105 transition-all hidden xl:block">Support</a>
+          <a href="#" class="hover:text-white hover:scale-105 transition-all hidden xl:block">Download</a>
+          <div class="h-5 w-[1px] bg-[#727272] hidden xl:block"></div>
+        </div>
+
+        <div id="auth-install-app" class="flex items-center">
+          <a href="#" class="flex items-center gap-1 hover:text-white hover:scale-105 transition-all mr-2">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+              <path
+                d="M7.498 1.002a.75.75 0 0 1 1 0v9.12l3.41-3.41a.75.75 0 1 1 1.06 1.061l-4.66 4.66a.75.75 0 0 1-1.06 0l-4.66-4.66a.75.75 0 1 1 1.06-1.061l3.41 3.41v-9.12z">
+              </path>
+              <path d="M1 13.5A.75.75 0 0 1 1.75 13h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 13.5z"></path>
+            </svg>
+            <span class="hidden sm:block">Install App</span>
+          </a>
+        </div>
+
+        <!-- Logged Out State (Auth Buttons) -->
+        <div id="auth-buttons" class="flex items-center gap-4 xl:gap-6">
+          <a href="/signup.html" class="hover:text-white hover:scale-105 transition-all font-bold text-[15px]">Sign up</a>
+          <a href="/login.html"
+            class="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-[15px] font-bold text-black hover:scale-105 transition-transform hover:bg-gray-100">Log
+            in</a>
+        </div>
+
+        <!-- Logged In State Links -->
+        <div id="logged-in-links" class="hidden items-center gap-2">
+          <a href="#" class="bg-white text-black text-[13px] font-bold px-4 py-1.5 rounded-full hover:scale-105 transition-transform hidden lg:block">Explore Premium</a>
+          <a href="#" class="text-white flex items-center gap-1 hover:scale-105 transition-transform px-3 py-1.5 text-[13px] font-bold hidden lg:flex">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+              <path d="M7.498 1.002a.75.75 0 0 1 1 0v9.12l3.41-3.41a.75.75 0 1 1 1.06 1.061l-4.66 4.66a.75.75 0 0 1-1.06 0l-4.66-4.66a.75.75 0 1 1 1.06-1.061l3.41 3.41v-9.12z"></path>
+              <path d="M1 13.5A.75.75 0 0 1 1.75 13h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 13.5z"></path>
+            </svg>
+            <span>Install App</span>
+          </a>
+          <button class="w-8 h-8 flex items-center justify-center text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] rounded-full transition-colors relative">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M8 1.5a4 4 0 0 0-4 4v3.27a.75.75 0 0 1-.1.373L2.255 12h11.49L12.1 9.142a.75.75 0 0 1-.1-.374V5.5a4 4 0 0 0-4-4zm-5.5 4a5.5 5.5 0 0 1 11 0v3.067l2.193 3.809a.75.75 0 0 1-.65 1.124H10.5a2.5 2.5 0 0 1-5 0H1.457a.75.75 0 0 1-.65-1.124L3 8.569V5.5zm4.5 8a1 1 0 1 0 2 0H7z"></path></svg>
+          </button>
+          <button class="w-8 h-8 flex items-center justify-center text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] rounded-full transition-colors">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M4 6.5a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zm2.5-1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8.5 13a3.5 3.5 0 0 0-7 0H0a5 5 0 0 1 10 0h-1.5z"></path><path d="M12.5 6.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm1.5-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm2 9.5h1.5a5 5 0 0 0-10 0h1.5a3.5 3.5 0 0 1 7 0z"></path></svg>
+          </button>
+        </div>
+
+        <!-- Logged In State (User Profile) -->
+        <div id="user-profile" class="hidden items-center justify-center w-8 h-8 rounded-full bg-[#1f1f1f] cursor-pointer relative" data-tooltip="Profile">
+          <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-[#535353] hover:scale-105 border-2 border-transparent hover:border-white transition-all">
+            <span id="user-initial" class="text-white font-bold text-[14px]"></span>
+            <img id="user-avatar" src="" class="w-full h-full object-cover hidden" />
+          </div>
+          
+          <!-- Dropdown -->
+          <div id="user-dropdown" class="absolute top-[120%] right-0 w-48 bg-[#282828] rounded-md shadow-lg p-1 hidden flex-col z-50">
+            <a href="#" class="px-3 py-2 text-white hover:bg-[#3e3e3e] rounded-sm text-sm font-medium flex justify-between items-center">
+              Account
+              <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M1 2.75A.75.75 0 0 1 1.75 2H7v1.5H2.5v9h9V8H13v4.75a.75.75 0 0 1-.75.75h-10a.75.75 0 0 1-.75-.75V2.75z"></path><path d="M7 2h6v6h-1.5V4.56L6.53 9.53l-1.06-1.06 4.97-4.97H7V2z"></path></svg>
+            </a>
+            <a href="#" class="px-3 py-2 text-white hover:bg-[#3e3e3e] rounded-sm text-sm font-medium">Profile</a>
+            <a href="#" class="px-3 py-2 text-white hover:bg-[#3e3e3e] rounded-sm text-sm font-medium flex justify-between items-center">
+              Upgrade to Premium
+              <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M1 2.75A.75.75 0 0 1 1.75 2H7v1.5H2.5v9h9V8H13v4.75a.75.75 0 0 1-.75.75h-10a.75.75 0 0 1-.75-.75V2.75z"></path><path d="M7 2h6v6h-1.5V4.56L6.53 9.53l-1.06-1.06 4.97-4.97H7V2z"></path></svg>
+            </a>
+            <a href="#" class="px-3 py-2 text-white hover:bg-[#3e3e3e] rounded-sm text-sm font-medium">Settings</a>
+            <div class="h-[1px] bg-[#3e3e3e] my-1"></div>
+            <button id="logout-btn" class="w-full text-left px-3 py-2 text-white hover:bg-[#3e3e3e] rounded-sm text-sm font-medium">Log out</button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- MAIN LAYOUT (Sidebar + Content) -->
+    <!-- Tính toán height = tổng màn hình trừ đi 16 (header 4rem) và trừ đi banner dưới cùng (khoảng 5rem = 20) -->
+    <div class="flex flex-1 gap-2 px-2 pb-2 min-h-0">
+
+      <!-- Sidebar -->
+      <aside id="sidebar-container" class="w-[320px] shrink-0 rounded-lg bg-[#121212] flex flex-col z-20 transition-[width] duration-300">
+
+        <!-- Sidebar Header (Fixed) -->
+        <div class="flex items-center justify-between px-4 pt-2 pb-1 text-[#b3b3b3] font-bold">
+          <div id="sidebar-header-default" class="flex items-center">
+            <button class="flex items-center gap-4 hover:text-white transition-colors py-2 px-2" data-tooltip="Collapse Your Library">
+              <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+                <path
+                  d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6.464a1 1 0 0 0-.5-.866l-6-3.464zM9 2a1 1 0 0 0-1 1v18a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1z">
+                </path>
+              </svg>
+              <span class="text-[16px]">Your Library</span>
+            </button>
+          </div>
+          <div id="sidebar-header-folder" class="hidden items-center gap-2">
+            <button id="sidebar-folder-back-btn" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#1a1a1a] text-[#b3b3b3] hover:text-white transition-colors">
+              <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M11.03.47a.75.75 0 0 1 0 1.06L4.56 8l6.47 6.47a.75.75 0 1 1-1.06 1.06L2.44 8 9.97.47a.75.75 0 0 1 1.06 0z"></path></svg>
+            </button>
+            <span id="sidebar-folder-title" class="text-[16px] text-white font-bold truncate max-w-[120px]">Folder Name</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Create Playlist Button -->
+            <div class="relative flex" id="create-btn-container">
+              <button id="sidebar-create-btn" class="flex h-8 w-8 items-center justify-center hover:bg-[#1a1a1a] hover:text-white rounded-full transition-colors" data-tooltip="Create playlist or folder" data-require-auth="true">
+                <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+                  <path d="M15.25 8a.75.75 0 0 1-.75.75H8.75v5.75a.75.75 0 0 1-1.5 0V8.75H1.5a.75.75 0 0 1 0-1.5h5.75V1.5a.75.75 0 0 1 1.5 0v5.75h5.75a.75.75 0 0 1 .75.75z"></path>
+                </svg>
+              </button>
+
+            <div id="create-dropdown" class="absolute top-[120%] left-0 bg-[#282828] rounded-md shadow-[0_16px_24px_rgba(0,0,0,0.5)] p-1 hidden flex-col z-[100] w-[300px] text-white">
+              <button id="dropdown-create-playlist-btn" class="require-auth-btn flex items-center gap-3 px-3 py-3 hover:bg-[#3e3e3e] rounded-sm text-left group/item transition-colors">
+                <div class="w-9 h-9 rounded-full bg-[#3e3e3e] group-hover/item:bg-[#4f4f4f] flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 16 16" class="h-4 w-4 fill-none stroke-white stroke-2"><path d="M3 14V3h9v4 M8 8h5 M10.5 5.5v5 M13 13.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[14px] font-medium text-white">Playlist</span>
+                  <span class="text-[12px] text-[#b3b3b3]">Create a playlist with songs or episodes</span>
+                </div>
+              </button>
+              <button id="dropdown-blend-btn" class="require-auth-btn flex items-center gap-3 px-3 py-3 hover:bg-[#3e3e3e] rounded-sm text-left group/item transition-colors w-full">
+                <div class="w-9 h-9 rounded-full bg-[#3e3e3e] group-hover/item:bg-[#4f4f4f] flex items-center justify-center shrink-0 relative">
+                  <div class="absolute w-[18px] h-[18px] border-[1.5px] border-white rounded-full left-1.5 top-1.5 opacity-60"></div>
+                  <div class="absolute w-[18px] h-[18px] border-[1.5px] border-white rounded-full right-1.5 bottom-1.5"></div>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[14px] font-medium text-white">Blend</span>
+                  <span class="text-[12px] text-[#b3b3b3]">Combine your friends' tastes into a playlist</span>
+                </div>
+              </button>
+              <div class="h-[1px] bg-[#3e3e3e] my-1 mx-2"></div>
+              <button id="dropdown-create-folder-btn" class="require-auth-btn flex items-center gap-3 px-3 py-3 hover:bg-[#3e3e3e] rounded-sm text-left group/item transition-colors">
+                <div class="w-9 h-9 rounded-full bg-[#3e3e3e] group-hover/item:bg-[#4f4f4f] flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 16 16" class="h-4 w-4 fill-none stroke-white stroke-[1.5]"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h4.2l1.6 1.6H13.5A1.5 1.5 0 0 1 15 5.1v7.4a1.5 1.5 0 0 1-1.5 1.5H2.5A1.5 1.5 0 0 1 1 12.5v-9z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[14px] font-medium text-white">Folder</span>
+                  <span class="text-[12px] text-[#b3b3b3]">Organize your playlists</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          <!-- Expand Button -->
+          <button id="sidebar-expand-btn" class="flex h-8 w-8 items-center justify-center hover:bg-[#1a1a1a] hover:text-white rounded-full transition-colors" data-tooltip="Expand Your Library">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+              <path d="M7.19 1A.749.749 0 0 1 8 1.75V4h-1.5V2.56L2.56 6.5H4v1.5H1V4h1.5v1.44L6.44 1.5A.749.749 0 0 1 7.19 1zM15 12h-1.5v-1.44l-3.94 3.94a.749.749 0 0 1-1.06-1.06l3.94-3.94H11V8h4v4z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+        <!-- Sidebar Scrollable Content -->
+        <div class="flex-1 overflow-y-scroll px-2 space-y-4 pt-2 custom-scrollbar">
+
+          <!-- Guest Sidebar -->
+          <div id="guest-sidebar" class="flex flex-col gap-4">
+            <!-- Card 1: Create playlist -->
+            <div class="bg-[#242424] rounded-lg px-5 py-4 flex flex-col gap-4">
+              <div class="flex flex-col gap-1.5">
+                <span class="font-bold text-white text-[15px]">Create your first playlist</span>
+                <span class="font-medium text-[13px] text-white">It's easy, we'll help you</span>
+              </div>
+              <button
+                class="require-auth-btn w-fit rounded-full bg-white px-4 py-1.5 text-[14px] font-bold text-black hover:scale-105 transition-transform mt-1">Create
+                playlist</button>
+            </div>
+
+            <!-- Card 2: Podcasts -->
+            <div class="bg-[#242424] rounded-lg px-5 py-4 flex flex-col gap-4">
+              <div class="flex flex-col gap-1.5">
+                <span class="font-bold text-white text-[15px]">Let's find some podcasts to follow</span>
+                <span class="font-medium text-[13px] text-white">We'll keep you updated on new episodes</span>
+              </div>
+              <button id="browse-podcasts-btn"
+                class="w-fit rounded-full bg-white px-4 py-1.5 text-[14px] font-bold text-black hover:scale-105 transition-transform mt-1">Browse podcasts</button>
+            </div>
+          </div>
+
+          <!-- User Sidebar -->
+          <div id="user-sidebar" class="hidden flex-col gap-2">
+            <!-- Chips -->
+            <div class="flex items-center gap-2 px-2 pb-2">
+              <button class="bg-[#242424] hover:bg-[#2a2a2a] text-white text-[13px] font-medium px-3 py-1.5 rounded-full transition-colors">Playlists</button>
+              <button class="bg-[#242424] hover:bg-[#2a2a2a] text-white text-[13px] font-medium px-3 py-1.5 rounded-full transition-colors">Artists</button>
+              <button class="bg-[#242424] hover:bg-[#2a2a2a] text-white text-[13px] font-medium px-3 py-1.5 rounded-full transition-colors">Albums</button>
+            </div>
+            
+            <!-- Filters & Sort -->
+            <div class="flex items-center justify-between px-2 py-1 relative">
+              <div class="flex items-center gap-2">
+                <button id="sidebar-search-btn" class="w-8 h-8 rounded-full hover:bg-[#1a1a1a] flex items-center justify-center text-[#b3b3b3] hover:text-white transition-colors">
+                  <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M7 1.75a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5zM.25 7a6.75 6.75 0 1 1 12.096 4.12l3.184 3.185a.75.75 0 1 1-1.06 1.06L11.304 12.2A6.75 6.75 0 0 1 .25 7z"></path></svg>
+                </button>
+                <div id="sidebar-search-container" class="hidden relative">
+                   <input type="text" id="sidebar-search-input" placeholder="Search in Your Library" class="bg-[#242424] text-white text-[12px] h-8 pl-8 pr-2 rounded-md focus:outline-none w-[160px] focus:bg-[#333]" />
+                   <svg viewBox="0 0 16 16" class="h-3 w-3 fill-[#b3b3b3] absolute left-2.5 top-1/2 -translate-y-1/2"><path d="M7 1.75a5.25 5.25 0 1 0 0 10.5 5.25 5.25 0 0 0 0-10.5zM.25 7a6.75 6.75 0 1 1 12.096 4.12l3.184 3.185a.75.75 0 1 1-1.06 1.06L11.304 12.2A6.75 6.75 0 0 1 .25 7z"></path></svg>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <button id="sidebar-sort-btn" class="flex items-center gap-1 text-[#b3b3b3] hover:text-white text-[13px] font-medium transition-colors hover:scale-105">
+                    <span id="sidebar-sort-text">Recents</span>
+                    <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M14 6l-6 6-6-6h12z"></path></svg>
+                  </button>
+                  <div id="sidebar-sort-dropdown" class="absolute top-[120%] right-0 bg-[#282828] rounded-md shadow-2xl p-1 hidden flex-col z-50 w-[180px] text-white font-sans">
+                    <span class="px-3 py-2 text-[11px] font-bold text-[#b3b3b3] uppercase tracking-wider mb-1 mt-1">Sort by</span>
+                    <button class="flex items-center justify-between px-3 py-2.5 text-[13px] text-[#1ed760] font-medium hover:bg-[#3e3e3e] rounded-sm sidebar-sort-option" data-sort="recents">
+                      Recents 
+                      <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M15.53 2.47a.75.75 0 0 1 0 1.06L4.907 14.153.47 9.716a.75.75 0 0 1 1.06-1.06l3.377 3.376L14.47 2.47a.75.75 0 0 1 1.06 0z"></path></svg>
+                    </button>
+                    <button class="flex items-center justify-between px-3 py-2.5 text-[13px] text-[#e5e5e5] font-medium hover:bg-[#3e3e3e] rounded-sm sidebar-sort-option" data-sort="recently-added">
+                      Recently Added 
+                      <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current hidden"><path d="M15.53 2.47a.75.75 0 0 1 0 1.06L4.907 14.153.47 9.716a.75.75 0 0 1 1.06-1.06l3.377 3.376L14.47 2.47a.75.75 0 0 1 1.06 0z"></path></svg>
+                    </button>
+                    <button class="flex items-center justify-between px-3 py-2.5 text-[13px] text-[#e5e5e5] font-medium hover:bg-[#3e3e3e] rounded-sm sidebar-sort-option" data-sort="alphabetical">
+                      Alphabetical 
+                      <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current hidden"><path d="M15.53 2.47a.75.75 0 0 1 0 1.06L4.907 14.153.47 9.716a.75.75 0 0 1 1.06-1.06l3.377 3.376L14.47 2.47a.75.75 0 0 1 1.06 0z"></path></svg>
+                    </button>
+                    <button class="flex items-center justify-between px-3 py-2.5 text-[13px] text-[#e5e5e5] font-medium hover:bg-[#3e3e3e] rounded-sm sidebar-sort-option" data-sort="creator">
+                      Creator 
+                      <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current hidden"><path d="M15.53 2.47a.75.75 0 0 1 0 1.06L4.907 14.153.47 9.716a.75.75 0 0 1 1.06-1.06l3.377 3.376L14.47 2.47a.75.75 0 0 1 1.06 0z"></path></svg>
+                    </button>
+
+                    <div class="h-[1px] bg-[#3e3e3e] my-1 mx-1"></div>
+
+                    <span class="px-3 py-2 mt-1 text-[11px] font-bold text-[#b3b3b3] uppercase tracking-wider flex items-center justify-between">
+                      View as
+                      <span id="sidebar-view-text" class="text-white normal-case font-medium">Default list</span>
+                    </span>
+                    <div class="flex items-center gap-1 px-2 py-1 mb-1">
+                      <!-- Compact list -->
+                      <button class="w-8 h-8 rounded-md hover:bg-[#3e3e3e] flex items-center justify-center text-[#b3b3b3] hover:text-white transition-colors sidebar-view-option" data-view="compact-list" data-label="Compact list">
+                        <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M14 11v1.5H2V11h12zm0-4.5v1.5H2V6.5h12zm0-4.5V3.5H2V2h12z"></path></svg>
+                      </button>
+                      <!-- Default list -->
+                      <button class="w-8 h-8 rounded-md bg-[#3e3e3e] flex items-center justify-center text-[#1ed760] transition-colors sidebar-view-option" data-view="default-list" data-label="Default list">
+                        <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M15 14.5H5V13h10v1.5zm0-5.75H5v-1.5h10v1.5zM15 3H5V1.5h10V3zM3 3H1V1.5h2V3zm0 5.75H1v-1.5h2v1.5zm0 5.75H1V13h2v1.5z"></path></svg>
+                      </button>
+                      <!-- Compact grid -->
+                      <button class="w-8 h-8 rounded-md hover:bg-[#3e3e3e] flex items-center justify-center text-[#b3b3b3] hover:text-white transition-colors sidebar-view-option" data-view="compact-grid" data-label="Compact grid">
+                        <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M14 1.5H2A.5.5 0 0 0 1.5 2v12a.5.5 0 0 0 .5.5h12a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-.5-.5zM3 13V3h10v10H3zM4 4h8v8H4V4z"></path></svg>
+                      </button>
+                      <!-- Default grid -->
+                      <button class="w-8 h-8 rounded-md hover:bg-[#3e3e3e] flex items-center justify-center text-[#b3b3b3] hover:text-white transition-colors sidebar-view-option" data-view="default-grid" data-label="Default grid">
+                        <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M7 1.5H2A.5.5 0 0 0 1.5 2v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-.5-.5zM3 6V3h3v3H3zm11-4.5h-5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-.5-.5zM10 6V3h3v3h-3zM7 8.5H2a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5V9a.5.5 0 0 0-.5-.5zM3 13v-3h3v3H3zm11-4.5h-5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5V9a.5.5 0 0 0-.5-.5zM10 13v-3h3v3h-3z"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- List -->
+            <div id="sidebar-list" class="flex flex-col px-2">
+              <div class="flex items-center gap-3 cursor-pointer hover:bg-[#1a1a1a] p-2 rounded-md transition-colors group">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#450af5] to-[#c4efd9] rounded-md flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6 fill-white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+                </div>
+                <div class="flex flex-col truncate">
+                  <span class="text-[#1ed760] font-medium text-[15px] truncate">Liked Songs</span>
+                  <span class="text-[#b3b3b3] text-[13px] truncate flex items-center gap-1">
+                    <svg viewBox="0 0 16 16" class="h-3 w-3 fill-[#1ed760]"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"></path></svg>
+                    Playlist • 196 songs
+                  </span>
+                </div>
+              </div>
+              
+              <!-- JS will inject dynamic playlists, artists, albums here -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar Footer (Fixed) -->
+        <div class="flex-none px-6 pt-6 pb-8">
+          <div class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-[#b3b3b3]">
+            <a href="#" class="hover:underline">Legal</a>
+            <a href="#" class="hover:underline">Safety & Privacy Center</a>
+            <a href="#" class="hover:underline">Privacy Policy</a>
+            <a href="#" class="hover:underline">Cookies</a>
+            <a href="#" class="hover:underline">About Ads</a>
+            <a href="#" class="hover:underline">Accessibility</a>
+          </div>
+          <a href="#" class="block hover:underline text-[11px] font-medium text-[#b3b3b3] mt-2 mb-8">Cookies</a>
+
+          <button id="lang-btn"
+            class="flex items-center gap-1.5 rounded-full border border-[#878787] px-3 py-1 text-[13px] font-bold text-white hover:border-white hover:scale-105 transition-all w-fit">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+              <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"></path>
+              <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0z"></path>
+            </svg>
+            <span id="lang-text">English</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 rounded-lg bg-[#121212] overflow-y-auto scrollbar-none relative">
+        
+        <!-- USER PROFILE PAGE -->
+        <div id="user-profile-page" class="hidden flex-col">
+          <!-- Header -->
+          <div class="h-[340px] bg-gradient-to-b from-[#535353] to-[#282828] flex items-end px-6 pb-6 gap-6">
+            <div id="up-avatar-container" class="w-[232px] h-[232px] bg-[#535353] shadow-[0_4px_60px_rgba(0,0,0,0.5)] flex items-center justify-center shrink-0 rounded-full overflow-hidden relative cursor-pointer group">
+              <span id="up-user-initial" class="text-white font-bold" style="font-size: 80px"></span>
+              <img id="up-user-avatar" src="" class="w-full h-full object-cover hidden" />
+              <!-- Hover edit overlay -->
+              <div class="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white"><path d="M17.318 1.975a3.329 3.329 0 1 1 4.707 4.707L8.451 20.256c-.49.49-1.082.867-1.735 1.103L2.34 22.94a1 1 0 0 1-1.28-1.28l1.581-4.376a4.114 4.114 0 0 1 1.103-1.735L17.318 1.975zm3.293 1.414a1.329 1.329 0 0 0-1.88 0L17.46 4.66l3.88 3.88 1.27-1.27a1.329 1.329 0 0 0 0-1.88zM16.046 6.075l-3.88-3.88L3.841 10.52c-.326.326-.577.722-.734 1.157L1.87 15.11l3.432-1.236c.435-.157.831-.408 1.157-.734l8.325-8.324z"></path></svg>
+                <span class="text-white text-[15px] font-medium">Choose photo</span>
+              </div>
+              <!-- Hidden File Input -->
+              <input type="file" id="up-avatar-input" accept="image/*" class="hidden" />
+            </div>
+            
+            <div class="flex flex-col gap-2 w-full mt-auto">
+              <span class="text-white text-sm font-medium">Profile</span>
+              <h1 id="up-user-name" class="text-white font-black tracking-tight line-clamp-2" style="font-size: clamp(2.5rem, 6vw, 6rem); line-height: 1.1;">User</h1>
+              <div class="flex items-center gap-2 text-sm text-white font-medium mt-3">
+                <span id="up-playlists-count" class="text-[#b3b3b3]">0 Public Playlists</span>
+                <span class="text-[#b3b3b3]">•</span>
+                <span id="up-following-count" class="text-[#b3b3b3]">0 Following</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions & Content -->
+          <div class="p-6 bg-gradient-to-b from-[#282828]/40 to-transparent min-h-screen">
+            <div class="mb-8">
+              <button class="w-10 h-10 rounded-full border border-[#878787] flex items-center justify-center text-white hover:scale-105 hover:border-white transition-all" data-tooltip="More options for User">
+                <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current"><path d="M4.5 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm7.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm7.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg>
+              </button>
+            </div>
+            <div class="flex flex-col mb-4">
+              <h2 class="text-white text-2xl font-bold hover:underline cursor-pointer mb-1">Top tracks this month</h2>
+              <span class="text-[#b3b3b3] text-sm">Only visible to you</span>
+            </div>
+            
+            <div id="up-tracks-list" class="flex flex-col">
+              <!-- Tracks rendered here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAYLIST DETAILS PAGE (Hidden by default, no padding) -->
+        <div id="playlist-details-page" class="hidden flex-col">
+          <!-- Header -->
+          <div class="h-[340px] bg-gradient-to-b from-[#535353] to-[#282828] flex items-end px-6 pb-6 gap-6">
+            <div id="pd-cover-container" class="w-[232px] h-[232px] bg-[#282828] shadow-[0_4px_60px_rgba(0,0,0,0.5)] flex items-center justify-center shrink-0 cursor-pointer group relative">
+              <svg id="pd-placeholder-icon" viewBox="0 0 24 24" class="w-16 h-16 fill-[#7f7f7f]"><path d="M6 3h15v15.5a3.5 3.5 0 1 1-3.5-3.5h1V7h-11v11.5a3.5 3.5 0 1 1-3.5-3.5h1V3zm2 2v9.04c-.32-.03-.65-.04-1-.04-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V7h11v5.04c-.32-.03-.65-.04-1-.04-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V5H8z"/></svg>
+              <img id="pd-cover-image" src="" class="w-full h-full object-cover hidden" />
+              <!-- Hover edit overlay -->
+              <div class="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white"><path d="M17.318 1.975a3.329 3.329 0 1 1 4.707 4.707L8.451 20.256c-.49.49-1.082.867-1.735 1.103L2.34 22.94a1 1 0 0 1-1.28-1.28l1.581-4.376a4.114 4.114 0 0 1 1.103-1.735L17.318 1.975zm3.293 1.414a1.329 1.329 0 0 0-1.88 0L17.46 4.66l3.88 3.88 1.27-1.27a1.329 1.329 0 0 0 0-1.88zM16.046 6.075l-3.88-3.88L3.841 10.52c-.326.326-.577.722-.734 1.157L1.87 15.11l3.432-1.236c.435-.157.831-.408 1.157-.734l8.325-8.324z"></path></svg>
+                <span class="text-white text-[15px] font-medium">Choose photo</span>
+              </div>
+            </div>
+            
+            <div class="flex flex-col gap-2 w-full mt-auto">
+              <span class="text-white text-sm font-medium" id="pd-status">Public Playlist</span>
+              <h1 id="pd-title" class="text-white font-black cursor-pointer tracking-tight line-clamp-2" style="font-size: clamp(2rem, 6vw, 6rem); line-height: 1;">My Playlist</h1>
+              <div class="flex items-center gap-2 text-sm text-white font-medium mt-3">
+                <img id="pd-user-avatar" src="" class="w-6 h-6 rounded-full object-cover bg-gray-500" />
+                <span id="pd-user-name" class="hover:underline cursor-pointer">User</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Body (dynamically rendered by detail.js) -->
+          <div id="pd-body" class="flex-1 bg-gradient-to-b from-[#222222] to-[#121212] px-6 py-6 min-h-[500px]">
+            <!-- Content injected by showPlaylistDetail() -->
+          </div>
+        </div>
+
+        <!-- ARTIST DETAILS PAGE -->
+        <div id="artist-details-page" class="hidden flex-col overflow-y-auto">
+          <!-- Content injected by showArtistDetail() -->
+        </div>
+
+        <!-- ALBUM DETAILS PAGE -->
+        <div id="album-details-page" class="hidden flex-col overflow-y-auto">
+          <!-- Content injected by showAlbumDetail() -->
+        </div>
+
+        <!-- BLEND PAGE -->
+        <div id="blend-page" class="hidden flex-col items-center justify-center min-h-full bg-[#121212] relative">
+          <div class="flex flex-col items-center justify-center flex-1 py-16 px-4">
+            <!-- Avatars -->
+            <div class="flex items-center justify-center mb-8">
+              <img id="blend-user-avatar" src="https://i.scdn.co/image/ab6761610000e5eb55d39ab9c21d506aa52f7021" class="w-[140px] h-[140px] rounded-full object-cover border-4 border-[#121212] z-10 shadow-lg" />
+              <div class="w-[130px] h-[130px] rounded-full bg-[#535353] flex items-center justify-center -ml-5 shadow-lg">
+                <svg viewBox="0 0 24 24" class="w-10 h-10 text-white/70 fill-none stroke-current stroke-[2]">
+                  <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <!-- Title -->
+            <h1 class="text-[32px] font-bold text-white mb-3">Invite friends</h1>
+            <!-- Description -->
+            <p class="text-[#b3b3b3] text-[15px] text-center max-w-[360px] mb-8 leading-relaxed">
+              Pick a friend to create a Blend with—a playlist that shows how your music taste matches up.
+            </p>
+            <!-- Invite Button -->
+            <button id="blend-invite-btn" class="px-8 py-3 rounded-full bg-white text-black font-bold text-[15px] hover:scale-105 hover:bg-[#f0f0f0] transition-all duration-200 shadow-md">
+              Invite
+            </button>
+          </div>
+          <!-- Footer Note -->
+          <div class="w-full py-5 px-6 text-center border-t border-[#2a2a2a]">
+            <p class="text-[#a7a7a7] text-[12px] leading-relaxed">
+              Note: You may invite up to 10 people. Connected people will see your profile picture and username. Inviting friends will create playlists and use other recommendation features that match your taste.
+            </p>
+          </div>
+        </div>
+
+        <!-- Main view inner padding -->
+        <div class="p-6 pb-20">
+          <div id="home-view" class="flex flex-col gap-8">
+            <!-- Home Filters -->
+            <div id="home-filters" class="flex items-center gap-2 mb-2">
+              <button class="home-filter-btn px-3 py-1.5 rounded-full bg-white text-black text-[14px] font-medium transition-colors" data-filter="all">All</button>
+              <button class="home-filter-btn px-3 py-1.5 rounded-full bg-[#2a2a2a] hover:bg-[#333333] text-white text-[14px] font-medium transition-colors" data-filter="music">Music</button>
+              <button class="home-filter-btn px-3 py-1.5 rounded-full bg-[#2a2a2a] hover:bg-[#333333] text-white text-[14px] font-medium transition-colors hidden" data-filter="following">Following</button>
+              <button class="home-filter-btn px-3 py-1.5 rounded-full bg-[#2a2a2a] hover:bg-[#333333] text-white text-[14px] font-medium transition-colors" data-filter="podcasts">Podcasts</button>
+            </div>
+            <!-- Quick Access (Top Grid) -->
+            <section id="home-quick-access-section" class="mb-4">
+              <div id="home-quick-access-list" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Dynamic Items Injected Here -->
+              </div>
+            </section>
+            <!-- Today's biggest hits (Tracks) -->
+            <section id="home-tracks-section" class="relative group">
+              <div class="flex items-end justify-between mb-4">
+                <h2 class="text-2xl font-bold hover:underline hover:cursor-pointer text-white">Today's biggest hits</h2>
+                <a href="#!" class="text-[14px] font-bold text-[#b3b3b3] hover:underline">Show all</a>
+              </div>
+              <div class="relative">
+                <div id="home-tracks-list" class="flex overflow-x-auto scrollbar-none items-start gap-4 pb-4">
+                  <!-- Dynamic Items -->
+                </div>
+                <button class="scroll-right-btn absolute -right-2 top-1/2 -translate-y-[calc(50%+1rem)] w-10 h-10 rounded-full bg-[#181818] shadow-lg text-white md:flex items-center justify-center hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity z-10 hidden">
+                  <svg viewBox="0 0 16 16" class="w-5 h-5 fill-current"><path d="M4.931 1.069L11.862 8l-6.931 6.931-.737-.738L10.388 8 4.194 1.806l.737-.737z"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <!-- Trending artists -->
+            <section id="home-artists-section" class="relative group">
+              <div class="flex items-end justify-between mb-4">
+                <h2 class="text-2xl font-bold hover:underline hover:cursor-pointer text-white">Trending artists</h2>
+                <a href="#!" class="text-[14px] font-bold text-[#b3b3b3] hover:underline">Show all</a>
+              </div>
+              <div class="relative">
+                <div id="home-artists-list" class="flex overflow-x-auto scrollbar-none items-start gap-4 pb-4">
+                  <!-- Dynamic Items -->
+                </div>
+                <button class="scroll-right-btn absolute -right-2 top-1/2 -translate-y-[calc(50%+1rem)] w-10 h-10 rounded-full bg-[#181818] shadow-lg text-white md:flex items-center justify-center hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity z-10 hidden">
+                  <svg viewBox="0 0 16 16" class="w-5 h-5 fill-current"><path d="M4.931 1.069L11.862 8l-6.931 6.931-.737-.738L10.388 8 4.194 1.806l.737-.737z"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <!-- Popular albums -->
+            <section id="home-albums-section" class="relative group">
+              <div class="flex items-end justify-between mb-4">
+                <h2 class="text-2xl font-bold hover:underline hover:cursor-pointer text-white">Popular albums</h2>
+                <a href="#!" class="text-[14px] font-bold text-[#b3b3b3] hover:underline">Show all</a>
+              </div>
+              <div class="relative">
+                <div id="home-albums-list" class="flex overflow-x-auto scrollbar-none items-start gap-4 pb-4">
+                  <!-- Dynamic Items -->
+                </div>
+                <button class="scroll-right-btn absolute -right-2 top-1/2 -translate-y-[calc(50%+1rem)] w-10 h-10 rounded-full bg-[#181818] shadow-lg text-white md:flex items-center justify-center hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity z-10 hidden">
+                  <svg viewBox="0 0 16 16" class="w-5 h-5 fill-current"><path d="M4.931 1.069L11.862 8l-6.931 6.931-.737-.738L10.388 8 4.194 1.806l.737-.737z"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <!-- All playlists -->
+            <section id="home-playlists-section" class="relative group">
+              <div class="flex items-end justify-between mb-4">
+                <h2 class="text-2xl font-bold hover:underline hover:cursor-pointer text-white">All playlists</h2>
+                <a href="#!" class="text-[14px] font-bold text-[#b3b3b3] hover:underline">Show all</a>
+              </div>
+              <div class="relative">
+                <div id="home-playlists-list" class="flex overflow-x-auto scrollbar-none items-start gap-4 pb-4">
+                  <!-- Dynamic Items -->
+                </div>
+                <button class="scroll-right-btn absolute -right-2 top-1/2 -translate-y-[calc(50%+1rem)] w-10 h-10 rounded-full bg-[#181818] shadow-lg text-white md:flex items-center justify-center hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity z-10 hidden">
+                  <svg viewBox="0 0 16 16" class="w-5 h-5 fill-current"><path d="M4.931 1.069L11.862 8l-6.931 6.931-.737-.738L10.388 8 4.194 1.806l.737-.737z"/></svg>
+                </button>
+              </div>
+            </section>
+          </div>
+          
+          <!-- View All Page -->
+          <div id="view-all-page" class="hidden flex-col gap-6">
+            <div class="flex items-end mb-2 mt-4">
+              <h1 id="view-all-title" class="text-3xl md:text-5xl font-bold text-white">Title</h1>
+            </div>
+            <div id="view-all-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              <!-- Dynamic Items -->
+            </div>
+          </div>
+
+          <!-- Podcasts Page -->
+          <div id="podcasts-page" class="hidden flex-col">
+            <div class="h-[200px] bg-gradient-to-b from-[#146b53] to-[#121212] -mx-6 -mt-6 px-6 pt-20 pb-6 flex items-end">
+              <h1 class="text-5xl md:text-7xl font-bold text-white tracking-tighter">Podcasts</h1>
+            </div>
+            <div class="mt-6 flex flex-col gap-6">
+              <h2 class="text-xl font-bold text-white">Categories</h2>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <!-- Static Categories -->
+                <div class="bg-[#148a8a] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Educational</span>
+                </div>
+                <div class="bg-[#5a335d] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Documentary</span>
+                </div>
+                <div class="bg-[#ba3b94] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Comedy</span>
+                </div>
+                <div class="bg-[#d81977] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Pop Culture</span>
+                </div>
+                <div class="bg-[#1e7855] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Fitness & Nutrition</span>
+                </div>
+                <div class="bg-[#787878] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Celebrities</span>
+                </div>
+                <div class="bg-[#0b6ce7] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Video games</span>
+                </div>
+                <div class="bg-[#1e3264] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Film</span>
+                </div>
+                <div class="bg-[#513653] rounded-lg p-4 h-32 relative overflow-hidden cursor-pointer hover:scale-105 transition-transform shrink-0 shadow-md">
+                  <span class="text-white font-bold text-xl leading-tight block">Books</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="mt-16 pt-10 pb-20 flex flex-col gap-10">
+            <div class="flex justify-between items-start gap-4">
+              <div class="flex gap-[100px]">
+                <div class="flex flex-col gap-2">
+                  <span class="text-white font-bold text-[15px] mb-2">Company</span>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">About</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Jobs</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">For the Record</a>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="text-white font-bold text-[15px] mb-2">Communities</span>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">For Artists</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">For Creators</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">For Authors</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Developers</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Advertising</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Investors</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Vendors</a>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="text-white font-bold text-[15px] mb-2">Useful links</span>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Support</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Free Mobile App</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Popular by Country</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Top Song Lyrics</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Import your music</a>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="text-white font-bold text-[15px] mb-2">Spotify Plans</span>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Premium Individual</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Premium Student</a>
+                  <a href="#" class="text-[#a7a7a7] hover:text-white hover:underline text-[15px] font-medium">Spotify Free</a>
+                </div>
+              </div>
+              <div class="flex gap-4">
+                <a href="#" class="w-10 h-10 rounded-full bg-[#292929] hover:bg-[#727272] flex items-center justify-center text-white transition-colors">
+                  <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"></path></svg>
+                </a>
+                <a href="#" class="w-10 h-10 rounded-full bg-[#292929] hover:bg-[#727272] flex items-center justify-center text-white transition-colors">
+                  <svg viewBox="0 0 24 24" class="w-[18px] h-[18px] fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                </a>
+                <a href="#" class="w-10 h-10 rounded-full bg-[#292929] hover:bg-[#727272] flex items-center justify-center text-white transition-colors">
+                  <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z" opacity="0"/><path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z"></path></svg>
+                </a>
+              </div>
+            </div>
+            <div class="border-t border-[#2a2a2a] pt-6 flex items-center justify-end mt-4">
+              <span class="text-[#a7a7a7] text-[13px] font-medium">© 2026 Spotify AB</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <!-- BOTTOM BANNER (Preview of Spotify) -->
+    <div id="preview-banner"
+      class="flex-none h-[80px] bg-gradient-to-r from-[#af2896] to-[#509bf5] flex items-center justify-between px-4 m-2 mt-0 rounded-lg shrink-0">
+      <div class="flex flex-col text-white">
+        <p class="text-[12px] font-bold uppercase tracking-widest mb-1">Preview of Spotify</p>
+        <p class="text-[15px] font-medium">Sign up to get unlimited songs and podcasts with occasional ads. No credit
+          card needed.</p>
+      </div>
+      <a href="/signup.html"
+        class="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-[16px] font-bold text-black hover:scale-105 transition-transform shrink-0">
+        Sign up free
+      </a>
+    </div>
+
+    <!-- Audio element for playback -->
+    <audio id="audio-player" class="hidden"></audio>
+
+    <!-- PLAYBAR (Logged In) -->
+    <div id="playbar" class="hidden flex-none h-[90px] bg-black items-center justify-between px-4 z-50 fixed bottom-0 left-0 w-full pb-2">
+      <!-- Left (Song Info) -->
+      <div class="flex items-center w-[30%] min-w-[180px]">
+        <img id="playbar-cover" src="https://community.spotify.com/t5/image/serverpage/image-id/196380iDD24539B5FCDEAF9/image-size/medium?v=v2&px=400" class="h-14 w-14 rounded-md object-cover mr-4" />
+        <div class="flex flex-col justify-center">
+          <a href="#" id="playbar-title" class="text-[14px] text-white font-medium hover:underline truncate max-w-[150px]">From The Start</a>
+          <a href="#" id="playbar-artist" class="text-[12px] text-[#b3b3b3] hover:underline truncate max-w-[150px]">Laufey</a>
+        </div>
+        <button id="playbar-like-btn" class="ml-4 text-[#b3b3b3] hover:text-white transition-colors hover:scale-105" data-tooltip="Save to Your Library">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current">
+            <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"></path>
+            <path d="M11.75 8a.75.75 0 0 1-.75.75H8.75V11a.75.75 0 0 1-1.5 0V8.75H5a.75.75 0 0 1 0-1.5h2.25V5a.75.75 0 0 1 1.5 0v2.25H11a.75.75 0 0 1 .75.75z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Center (Controls) -->
+      <div class="flex flex-col items-center justify-center w-[40%] max-w-[722px]">
+        <div class="flex items-center gap-6 mb-2">
+          <!-- Shuffle -->
+          <button id="playbar-shuffle-btn" class="text-[#b3b3b3] hover:text-white transition-colors" data-tooltip="Enable shuffle">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M13.151.922a.75.75 0 1 0-1.06 1.06L13.109 3H11.16a3.75 3.75 0 0 0-2.873 1.34l-6.173 7.356A2.25 2.25 0 0 1 .39 12.5H0V11h.391a.75.75 0 0 0 .577-.267l6.172-7.356a3.75 3.75 0 0 1 2.874-1.339h2.09l-1.018-1.018a.75.75 0 1 0 1.06-1.06L15.341 3.25l-2.19-2.328zM0 5h.391a2.25 2.25 0 0 1 1.724.806l.542.646-1.15 1.372-.543-.647A.75.75 0 0 0 .39 7H0V5zm15.341 7.75l-2.19 2.328a.75.75 0 1 1-1.06-1.06l1.018-1.018h-2.09a3.75 3.75 0 0 1-2.874-1.34l-.542-.646 1.15-1.371.543.646a2.25 2.25 0 0 0 1.723.806h2.09l-1.018-1.018a.75.75 0 0 1 1.06-1.06l2.19 2.328z"></path></svg>
+          </button>
+          <!-- Previous -->
+          <button id="playbar-prev-btn" class="text-[#b3b3b3] hover:text-white transition-colors" data-tooltip="Previous">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M3.3 1a.7.7 0 0 1 .7.7v5.15l9.95-5.744a.7.7 0 0 1 1.05.606v12.575a.7.7 0 0 1-1.05.607L4 9.149V14.3a.7.7 0 0 1-.7.7H1.7a.7.7 0 0 1-.7-.7V1.7a.7.7 0 0 1 .7-.7h1.6z"></path></svg>
+          </button>
+          <!-- Play/Pause -->
+          <button id="playbar-play-btn" class="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform text-black" data-tooltip="Pause">
+            <svg id="playbar-play-icon" viewBox="0 0 16 16" class="h-4 w-4 fill-current hidden"><path d="M3 1.713a.7.7 0 0 1 1.05-.607l10.89 6.288a.7.7 0 0 1 0 1.212L4.05 14.894A.7.7 0 0 1 3 14.288V1.713z"></path></svg>
+            <svg id="playbar-pause-icon" viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M2.7 1a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7H2.7zm8 0a.7.7 0 0 0-.7.7v12.6a.7.7 0 0 0 .7.7h2.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-2.6z"></path></svg>
+          </button>
+          <!-- Next -->
+          <button id="playbar-next-btn" class="text-[#b3b3b3] hover:text-white transition-colors" data-tooltip="Next">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M12.7 1a.7.7 0 0 0-.7.7v5.15L2.05 1.107A.7.7 0 0 0 1 1.712v12.575a.7.7 0 0 0 1.05.607L12 9.149V14.3a.7.7 0 0 0 .7.7h1.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-1.6z"></path></svg>
+          </button>
+          <!-- Repeat -->
+          <button id="playbar-repeat-btn" class="text-[#b3b3b3] hover:text-white transition-colors" data-tooltip="Enable repeat">
+            <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75v-5z"></path></svg>
+          </button>
+        </div>
+        <div class="flex items-center w-full gap-2">
+          <span id="playbar-current-time" class="text-[11px] text-[#a7a7a7] font-medium min-w-[40px] text-right">0:00</span>
+          <div id="playbar-progress-container" class="h-1 flex-1 bg-[#4d4d4d] rounded-full group hover:cursor-pointer relative">
+            <div id="playbar-progress-fill" class="absolute top-0 left-0 h-full w-[30%] bg-white rounded-full group-hover:bg-[#1db954]"></div>
+            <div id="playbar-progress-handle" class="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-md"></div>
+          </div>
+          <span id="playbar-total-time" class="text-[11px] text-[#a7a7a7] font-medium min-w-[40px]">2:49</span>
+        </div>
+      </div>
+
+      <!-- Right (Volume, etc) -->
+      <div class="flex items-center justify-end w-[30%] min-w-[300px] gap-3 text-[#b3b3b3] pr-2">
+        <!-- Lyrics -->
+        <button class="hover:text-white transition-colors" data-tooltip="Lyrics">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M7 1.5C7 1.224 7.224 1 7.5 1h1c.276 0 .5.224.5.5v5.5a2.5 2.5 0 0 1-5 0v-5.5C4 1.224 4.224 1 4.5 1h1c.276 0 .5.224.5.5V7a1 1 0 1 0 2 0V1.5z"></path><path d="M12.5 7v.5A4.5 4.5 0 0 1 8 12v1.5h1.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1 0-1H8V12A4.5 4.5 0 0 1 3.5 7.5V7a.5.5 0 0 1 1 0v.5A3.5 3.5 0 0 0 8 11a3.5 3.5 0 0 0 3.5-3.5V7a.5.5 0 0 1 1 0z"></path></svg>
+        </button>
+        <!-- Queue -->
+        <button class="hover:text-white transition-colors" data-tooltip="Queue">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M15 15H1v-1.5h14V15zm0-4.5H1V9h14v1.5zm-14-7A2.5 2.5 0 0 1 3.5 1h9a2.5 2.5 0 0 1 0 5h-9A2.5 2.5 0 0 1 1 3.5zm2.5-1a1 1 0 0 0 0 2h9a1 1 0 1 0 0-2h-9z"></path></svg>
+        </button>
+        <!-- Connect to a device -->
+        <button class="hover:text-white transition-colors" data-tooltip="Connect to a device">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M1 3v10h14V3H1zm1.5 1.5h11v7h-11v-7z"></path></svg>
+        </button>
+        <!-- Volume -->
+        <div class="flex items-center gap-2 w-[93px]">
+          <button id="playbar-volume-btn" class="hover:text-white transition-colors" data-tooltip="Mute">
+            <!-- Muted icon (hidden initially) -->
+            <svg id="playbar-volume-icon-mute" viewBox="0 0 16 16" class="h-4 w-4 fill-current hidden"><path d="M13.86 5.47a.75.75 0 0 0-1.061 0l-1.47 1.47-1.47-1.47A.75.75 0 1 0 8.8 6.53L10.269 8l-1.47 1.47a.75.75 0 1 0 1.06 1.06l1.47-1.47 1.47 1.47a.75.75 0 0 0 1.06-1.06L12.39 8l1.47-1.47a.75.75 0 0 0 0-1.06z"></path><path d="M10.116 1.5A.75.75 0 0 0 8.991.85l-6.925 4a3.642 3.642 0 0 0-1.33 4.967 3.639 3.639 0 0 0 1.33 1.332l6.925 4a.75.75 0 0 0 1.125-.649v-13zM2.819 6.222L8.616 2.87v10.26L2.819 9.778a2.139 2.139 0 0 1 0-3.556z"></path></svg>
+            <!-- Normal volume icon -->
+            <svg id="playbar-volume-icon-normal" viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M9.741.85a.75.75 0 0 1 .375.65v13a.75.75 0 0 1-1.125.65l-6.925-4a3.642 3.642 0 0 1-1.33-4.967 3.639 3.639 0 0 1 1.33-1.332l6.925-4a.75.75 0 0 1 .75 0zm-6.924 5.3a2.139 2.139 0 0 0 0 3.7l5.8 3.35V2.8l-5.8 3.35zm8.683 4.29V5.56a2.75 2.75 0 0 1 0 4.88z"></path><path d="M11.5 13.614a5.752 5.752 0 0 0 0-11.228v1.55a4.252 4.252 0 0 1 0 8.127v1.55z"></path></svg>
+          </button>
+          <div id="playbar-volume-container" class="h-1 w-full bg-[#4d4d4d] rounded-full group hover:cursor-pointer relative">
+            <div id="playbar-volume-fill" class="absolute top-0 left-0 h-full w-[60%] bg-white rounded-full group-hover:bg-[#1db954]"></div>
+            <div id="playbar-volume-handle" class="absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-md"></div>
+          </div>
+        </div>
+        <!-- Open Miniplayer -->
+        <button class="hover:text-white transition-colors" data-tooltip="Open Miniplayer">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M16 13H0V3h16v10zm-1.5-8.5H1.5v7h13v-7zM11 6h3v4h-3V6z"></path></svg>
+        </button>
+        <!-- Full screen -->
+        <button class="hover:text-white transition-colors" data-tooltip="Full screen">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M6.53 5.47l-2.78 2.78-1.06-1.06 4.37-4.37h-3.69v-1.5h6v6h-1.5V3.63L5.47 6.53zm3.47 5.06l2.78-2.78 1.06 1.06-4.37 4.37h3.69v1.5h-6v-6h1.5v3.63l2.84-2.84z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div id="context-menu" class="hidden fixed bg-[#282828] rounded-md shadow-[0_16px_24px_rgba(0,0,0,0.5)] p-1 z-[100] w-48 text-[13px] text-white font-medium">
+    <ul id="context-menu-list" class="flex flex-col">
+      <!-- Injected by JS -->
+    </ul>
+  </div>
+
+  <!-- Edit Playlist Modal -->
+  <div id="edit-playlist-modal" class="hidden fixed inset-0 z-[200] bg-black/70 flex items-center justify-center">
+    <div class="bg-[#282828] rounded-lg shadow-2xl p-6 w-[524px] max-w-[90vw] flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-white">Edit details</h2>
+        <button id="close-edit-modal-btn" class="w-8 h-8 flex items-center justify-center text-[#b3b3b3] hover:text-white rounded-full hover:bg-[#3e3e3e] transition-colors">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M1.47 1.47a.75.75 0 0 1 1.06 0L8 6.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L9.06 8l5.47 5.47a.75.75 0 1 1-1.06 1.06L8 9.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L6.94 8 1.47 2.53a.75.75 0 0 1 0-1.06z"></path></svg>
+        </button>
+      </div>
+      
+      <div class="flex gap-4">
+        <!-- Image Upload -->
+        <div class="w-[180px] h-[180px] bg-[#3e3e3e] shadow-[0_4px_60px_rgba(0,0,0,0.5)] rounded-md shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center" id="edit-playlist-image-container">
+          <img id="edit-playlist-image" src="" class="w-full h-full object-cover hidden" />
+          <svg id="edit-playlist-icon" viewBox="0 0 24 24" class="h-16 w-16 fill-[#7f7f7f] group-hover:hidden"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+          <div class="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center gap-2">
+            <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white"><path d="M17.318 1.975a3.329 3.329 0 1 1 4.707 4.707L8.451 20.256c-.49.49-1.082.867-1.735 1.103L2.34 22.94a1 1 0 0 1-1.28-1.28l1.581-4.376a4.114 4.114 0 0 1 1.103-1.735L17.318 1.975zm3.293 1.414a1.329 1.329 0 0 0-1.88 0L17.46 4.66l3.88 3.88 1.27-1.27a1.329 1.329 0 0 0 0-1.88zM16.046 6.075l-3.88-3.88L3.841 10.52c-.326.326-.577.722-.734 1.157L1.87 15.11l3.432-1.236c.435-.157.831-.408 1.157-.734l8.325-8.324z"></path></svg>
+            <span class="text-white text-[15px] font-medium">Choose photo</span>
+          </div>
+          <input type="file" id="edit-playlist-file" class="hidden" accept="image/jpeg, image/png" />
+        </div>
+        
+        <!-- Form Inputs -->
+        <div class="flex flex-col gap-3 flex-1">
+          <input type="text" id="edit-playlist-name" class="w-full bg-[#3e3e3e] text-white text-[13px] h-10 px-3 rounded-[4px] focus:outline-none focus:bg-[#4a4a4a]" placeholder="Name" />
+          <textarea id="edit-playlist-desc" class="w-full bg-[#3e3e3e] text-white text-[13px] h-[128px] p-3 rounded-[4px] focus:outline-none focus:bg-[#4a4a4a] resize-none" placeholder="Add an optional description"></textarea>
+        </div>
+      </div>
+      
+      <!-- Save Button & Footer -->
+      <div class="flex items-center justify-between mt-2">
+        <button id="edit-playlist-privacy-btn" class="flex items-center gap-2 text-white text-[13px] font-medium border border-[#878787] rounded-full px-4 py-1.5 hover:border-white hover:scale-105 transition-all">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current" id="edit-playlist-privacy-icon"><path d="M11 5V4a3 3 0 0 0-6 0v1H3.5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H11zM6.5 4a1.5 1.5 0 0 1 3 0v1h-3V4zm5.5 10h-8V6.5h8V14z"></path></svg>
+          <span id="edit-playlist-privacy-text">Make private</span>
+        </button>
+        <button id="save-playlist-btn" class="bg-white text-black font-bold text-[15px] px-8 py-3 rounded-full hover:scale-105 hover:bg-gray-100 transition-transform">Save</button>
+      </div>
+      <p class="text-[11px] font-medium text-white">By proceeding, you agree to give Spotify access to the image you choose to upload. Please make sure you have the right to upload the image.</p>
+    </div>
+  </div>
+
+  <!-- Upload Track Modal -->
+  <div id="upload-track-modal" class="hidden fixed inset-0 z-[200] bg-black/70 flex items-center justify-center">
+    <div class="bg-[#282828] rounded-lg shadow-2xl p-6 w-[524px] max-w-[90vw] flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-white">Upload Track</h2>
+        <button id="close-upload-modal-btn" class="w-8 h-8 flex items-center justify-center text-[#b3b3b3] hover:text-white rounded-full hover:bg-[#3e3e3e] transition-colors">
+          <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M1.47 1.47a.75.75 0 0 1 1.06 0L8 6.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L9.06 8l5.47 5.47a.75.75 0 1 1-1.06 1.06L8 9.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L6.94 8 1.47 2.53a.75.75 0 0 1 0-1.06z"></path></svg>
+        </button>
+      </div>
+      
+      <div class="flex gap-4">
+        <!-- Image Upload -->
+        <div class="w-[180px] h-[180px] bg-[#3e3e3e] shadow-[0_4px_60px_rgba(0,0,0,0.5)] rounded-md shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center" id="upload-track-image-container">
+          <img id="upload-track-image" src="" class="w-full h-full object-cover hidden" />
+          <svg id="upload-track-icon" viewBox="0 0 24 24" class="h-16 w-16 fill-[#7f7f7f] group-hover:hidden"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+          <div class="absolute inset-0 bg-black/60 hidden group-hover:flex flex-col items-center justify-center gap-2">
+            <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white"><path d="M17.318 1.975a3.329 3.329 0 1 1 4.707 4.707L8.451 20.256c-.49.49-1.082.867-1.735 1.103L2.34 22.94a1 1 0 0 1-1.28-1.28l1.581-4.376a4.114 4.114 0 0 1 1.103-1.735L17.318 1.975zm3.293 1.414a1.329 1.329 0 0 0-1.88 0L17.46 4.66l3.88 3.88 1.27-1.27a1.329 1.329 0 0 0 0-1.88zM16.046 6.075l-3.88-3.88L3.841 10.52c-.326.326-.577.722-.734 1.157L1.87 15.11l3.432-1.236c.435-.157.831-.408 1.157-.734l8.325-8.324z"></path></svg>
+            <span class="text-white text-[15px] font-medium text-center px-2">Choose Cover</span>
+          </div>
+          <input type="file" id="upload-track-img-file" class="hidden" accept="image/jpeg, image/png" />
+        </div>
+        
+        <!-- Form Inputs -->
+        <div class="flex flex-col gap-3 flex-1">
+          <input type="text" id="upload-track-name" class="w-full bg-[#3e3e3e] text-white text-[13px] h-10 px-3 rounded-[4px] focus:outline-none focus:bg-[#4a4a4a]" placeholder="Song Title" />
+          <input type="text" id="upload-track-artist" class="w-full bg-[#3e3e3e] text-white text-[13px] h-10 px-3 rounded-[4px] focus:outline-none focus:bg-[#4a4a4a]" placeholder="Artist Name" />
+          
+          <div class="mt-auto">
+             <label class="w-full bg-[#3e3e3e] hover:bg-[#4a4a4a] text-white text-[13px] h-10 px-3 flex items-center justify-center rounded-[4px] cursor-pointer transition-colors border border-[#878787]">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 mr-2 fill-current"><path d="M11 14h2v-3h3V9h-3V6h-2v3H8v2h3v3zm-4 4h10v2H7v-2z"></path></svg>
+                <span id="upload-track-audio-label">Select MP3 Audio File</span>
+                <input type="file" id="upload-track-audio-file" class="hidden" accept="audio/mp3, audio/mpeg, audio/wav, audio/ogg" />
+             </label>
+             <audio id="upload-track-audio-preview" class="hidden"></audio>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Save Button & Footer -->
+      <div class="flex items-center justify-end mt-2 gap-4">
+        <span id="upload-track-error" class="text-red-500 text-xs hidden">Please fill all fields</span>
+        <button id="save-track-btn" class="bg-[#1ed760] text-black font-bold text-[15px] px-8 py-3 rounded-full hover:scale-105 hover:bg-[#1fdf64] transition-transform opacity-50 cursor-not-allowed">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Popover Tooltip -->
+  <div id="auth-tooltip" class="fixed hidden z-[9999] opacity-0 transition-opacity duration-200">
+    <div class="relative bg-[#2e77d0] text-white rounded-lg p-4 shadow-xl w-[320px] flex flex-col gap-2">
+      <h3 id="auth-tooltip-title" class="font-bold text-[16px]">Create a playlist</h3>
+      <p id="auth-tooltip-msg" class="text-[14px] font-medium mb-3">Log in to create and share playlists.</p>
+      <div class="flex items-center justify-end gap-3">
+        <button id="auth-tooltip-close" class="text-white font-bold text-[14px] hover:scale-105 transition-transform">Not now</button>
+        <a href="/login.html" class="bg-white text-black font-bold text-[14px] px-6 py-2 rounded-full hover:scale-105 transition-transform">Log in</a>
+      </div>
+      <!-- Arrow pointing left -->
+      <div id="auth-tooltip-arrow" class="absolute w-4 h-4 bg-[#2e77d0] rotate-45 -left-2 top-4"></div>
+    </div>
+  </div>
+    <!-- Profile/Account Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] hidden">
+      <div class="bg-[#282828] w-full max-w-md rounded-lg p-6 shadow-2xl relative">
+        <button id="close-profile-modal" class="absolute top-4 right-4 text-[#b3b3b3] hover:text-white transition-colors">
+          <svg viewBox="0 0 16 16" class="h-6 w-6 fill-current"><path d="M1.47 1.47a.75.75 0 0 1 1.06 0L8 6.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L9.06 8l5.47 5.47a.75.75 0 1 1-1.06 1.06L8 9.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L6.94 8 1.47 2.53a.75.75 0 0 1 0-1.06z"/></svg>
+        </button>
+        <h2 class="text-2xl font-bold text-white mb-6 text-center">Account Overview</h2>
+        
+        <div class="flex flex-col items-center mb-6">
+          <div class="w-24 h-24 rounded-full bg-[#535353] flex items-center justify-center overflow-hidden mb-4 shadow-lg">
+            <span id="modal-user-initial" class="text-white font-bold text-4xl"></span>
+            <img id="modal-user-avatar" src="" class="w-full h-full object-cover hidden" />
+          </div>
+          <h3 id="modal-user-display-name" class="text-white text-xl font-bold"></h3>
+          <p id="modal-user-role" class="text-[#1ed760] text-sm font-medium uppercase tracking-wider mt-1"></p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center py-3 border-b border-[#3e3e3e]">
+            <span class="text-[#b3b3b3] text-sm">Username</span>
+            <span id="modal-user-username" class="text-white font-medium"></span>
+          </div>
+          <div class="flex justify-between items-center py-3 border-b border-[#3e3e3e]">
+            <span class="text-[#b3b3b3] text-sm">Email</span>
+            <span id="modal-user-email" class="text-white font-medium"></span>
+          </div>
+          <div class="flex justify-between items-center py-3 border-b border-[#3e3e3e]">
+            <span class="text-[#b3b3b3] text-sm">Account ID</span>
+            <span id="modal-user-id" class="text-white font-medium text-xs font-mono"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generic Tooltip -->
+    <div id="generic-tooltip" class="fixed z-[200] bg-[#282828] text-white text-[13px] px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap opacity-0 transition-opacity hidden"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
